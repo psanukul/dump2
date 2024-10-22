@@ -1,0 +1,139 @@
+<html>
+<head>
+    <title>Draggable Carousel</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f8f8f8;
+            font-family: Arial, sans-serif;
+        }
+        .carousel-container {
+            width: 80%;
+            max-width: 800px;
+            overflow: hidden;
+            position: relative;
+        }
+        .carousel {
+            display: flex;
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.3s ease;
+            overflow-x: auto; /* Allow horizontal scrolling */
+        }
+        .carousel::-webkit-scrollbar {
+            display: none; /* Hide scrollbar */
+        }
+        .carousel img {
+            width: 100%;
+            height: auto;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+        .caption {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+<body>
+    <div class="carousel-container">
+        <div class="carousel">
+            <img src="https://storage.googleapis.com/a1aa/image/sB0I8ad31BY3Etmvh4I3LPbYCHexw1eMtznRB2ZLd1jDoEpTA.jpg" alt="Floor plan" class="clone">
+            <img src="https://storage.googleapis.com/a1aa/image/N4Y4ypjCJCZaAxshufD2pFxCR8SojbU9945vAisY2CgCUi0JA.jpg" alt="Exterior view of the building">
+            <img src="https://storage.googleapis.com/a1aa/image/byM03CfsQJRsBqczlpFaMG16kahYAza74srC8sJU1q0EUi0JA.jpg" alt="Interior view of a room with wooden floor and windows">
+            <img src="https://storage.googleapis.com/a1aa/image/UkleEui7ltTyWakwImedjV1FhvHG9RjEQ9CZHcfgYAVRQJSnA.jpg" alt="Interior view of a kitchen with wooden floor and appliances">
+            <img src="https://storage.googleapis.com/a1aa/image/wDm4uFxHhZYxFBqTIrIdcvGBnq4HlDjYyh1jm4yz4XtBKR6E.jpg" alt="Interior view of a bathroom with white tiles">
+            <img src="https://storage.googleapis.com/a1aa/image/sB0I8ad31BY3Etmvh4I3LPbYCHexw1eMtznRB2ZLd1jDoEpTA.jpg" alt="Floor plan">
+            <img src="https://storage.googleapis.com/a1aa/image/N4Y4ypjCJCZaAxshufD2pFxCR8SojbU9945vAisY2CgCUi0JA.jpg" alt="Exterior view of the building" class="clone">
+        </div>
+        <div class="caption">1/5</div>
+    </div>
+
+    <script>
+        const carousel = document.querySelector('.carousel');
+        let isDown = false;
+        let startX;
+        let scrollLeft;
+
+        carousel.addEventListener('mousedown', (e) => {
+            isDown = true;
+            carousel.classList.add('active');
+            startX = e.pageX - carousel.offsetLeft;
+            scrollLeft = carousel.scrollLeft;
+        });
+
+        carousel.addEventListener('mouseleave', () => {
+            isDown = false;
+            carousel.classList.remove('active');
+            snapToImage();
+        });
+
+        carousel.addEventListener('mouseup', () => {
+            isDown = false;
+            carousel.classList.remove('active');
+            snapToImage();
+        });
+
+        carousel.addEventListener('mousemove', (e) => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x = e.pageX - carousel.offsetLeft;
+            const walk = (x - startX) * 2; // Adjust scroll speed
+            carousel.scrollLeft = scrollLeft - walk;
+        });
+
+        function snapToImage() {
+            const imageWidth = carousel.clientWidth;
+            const scrollLeft = carousel.scrollLeft;
+            const index = Math.round(scrollLeft / imageWidth);
+            carousel.scrollTo({
+                left: index * imageWidth,
+                behavior: 'smooth'
+            });
+            updateCaption(index);
+        }
+
+        let currentIndex = 0;
+        const images = document.querySelectorAll('.carousel img');
+        const caption = document.querySelector('.caption');
+
+        function updateCaption(index) {
+            currentIndex = index;
+            if (currentIndex === 0) {
+                currentIndex = images.length - 2;
+            } else if (currentIndex === images.length - 1) {
+                currentIndex = 1;
+            }
+            caption.textContent = `${currentIndex}/${images.length - 2}`;
+        }
+
+        carousel.addEventListener('scroll', () => {
+            const index = Math.round(carousel.scrollLeft / carousel.clientWidth);
+            updateCaption(index);
+        });
+
+        carousel.addEventListener('scroll', () => {
+            if (carousel.scrollLeft === 0) {
+                carousel.scrollLeft = carousel.scrollWidth - 2 * carousel.clientWidth;
+            } else if (carousel.scrollLeft === carousel.scrollWidth - carousel.clientWidth) {
+                carousel.scrollLeft = carousel.clientWidth;
+            }
+        });
+
+        updateCaption(1);
+        carousel.scrollLeft = carousel.clientWidth;
+    </script>
+</body>
+</html>

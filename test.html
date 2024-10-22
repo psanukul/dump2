@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Carousel</title>
+    <style>
+        .carousel {
+            display: flex;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .carousel-inner {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+
+        .carousel-item {
+            min-width: calc(25%);
+        }
+
+        .carousel-item.double {
+            min-width: calc(50%);
+        }
+
+        .carousel-img {
+            width: calc(100% - 1rem);
+            padding: 0.5rem;
+            object-fit: cover;
+            height: 20rem;
+        }
+
+        .carousel-double {
+            height: 20rem;
+        }
+
+        .carousel-half-img {
+            width: calc(100% - 1rem);
+            height: 50%;
+            padding: 0.5rem;
+            object-fit: cover;
+        }
+
+        .carousel-label {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            background-color: rgba(31, 41, 55, 0.5);
+            color: white;
+            padding: 0.25rem;
+        }
+
+        .nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: black;
+            color: white;
+            padding: 0.5rem;
+            cursor: pointer;
+            z-index: 10;
+        }
+
+        .nav-btn.left {
+            left: 0;
+        }
+
+        .nav-btn.right {
+            right: 0;
+        }
+
+        .nav-btn.modal-left {
+            left: 5rem;
+        }
+
+        .nav-btn.modal-right {
+            right: 5rem;
+        }
+
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .button-container {
+            position: absolute;
+            right: 1.25rem;
+            bottom: 2rem;
+            transform: translateY(50%);
+        }
+
+        .show-all-button {
+            background-color: white;
+            color: black;
+            border: 1px solid rgba(156, 163, 175);
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            cursor: pointer;
+        }
+
+        .modal-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            width: 100%;
+            background-color: white;
+            z-index: 50;
+            display: none;
+        }
+
+        .modal-header {
+            height: 5rem;
+            width: 100%;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .close-button {
+            cursor: pointer;
+            border: 1px solid currentColor;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+        }
+
+        .carousel-wrapper {
+            position: relative;
+            width: 75%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .carousel-viewport {
+            overflow: hidden;
+        }
+
+        .modal-carousel-inner {
+            display: flex;
+            transition: transform 0.5s ease;
+        }
+
+        .modal-carousel-item {
+            min-width: 100%;
+        }
+
+        .modal-carousel-image {
+            width: calc(100% - 1rem);
+            height: 80vh;
+            padding-left: 0.5rem;
+            padding-right: 0.5rem;
+            object-fit: cover;
+        }
+
+        @media (min-width: 768px) {
+            .carousel-img, .carousel-double {
+                height: 20rem;
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .carousel-img, .carousel-double {
+                height: 24rem;
+            }
+        }
+
+        @media (min-width: 1280px) {
+            .carousel-container {
+                margin-left: 8rem;
+                margin-right: 8rem;
+            }
+
+            .nav-btn.left {
+                left: 5%;
+            }
+
+            .nav-btn.right {
+                right: 5%;
+            }
+        }
+        .center-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body class="center-content" >
+    <div class="nav-btn left" onclick="handleMoveLeft()">left</div>
+    <div class="nav-btn right" onclick="handleMoveRight()">right</div>
+
+    <div class="carousel-container">
+        <div class="carousel">
+            <div class="carousel-inner" id="carouselInner">
+                <!-- Carousel items will be inserted here by JavaScript -->
+            </div>
+        </div>
+
+        <div class="button-container">
+            <button onclick="showModal(0)" class="show-all-button">
+                Show all photos
+            </button>
+        </div>
+    </div>
+
+    <div class="modal-container" id="modalContainer">
+        <div class="modal-header">
+            <p id="modalImageName"></p>
+            <div class="header-actions">
+                <p id="modalImageCount"></p>
+                <p class="close-button" onclick="closeModal()">close</p>
+            </div>
+        </div>
+
+        <div class="carousel-wrapper">
+            <div class="carousel-viewport">
+                <div class="modal-carousel-inner" id="modalCarouselInner">
+                    <!-- Modal carousel items will be inserted here by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <div class="nav-btn modal-left" onclick="handleModalMoveLeft()">left</div>
+        <div class="nav-btn modal-right" onclick="handleModalMoveRight()">right</div>
+    </div>
+
+    <script>
+        const images = [
+            { src: "https://storage.googleapis.com/a1aa/image/N4Y4ypjCJCZaAxshufD2pFxCR8SojbU9945vAisY2CgCUi0JA.jpg", alt: "Exterior view of the building", double: true, name: "Building Exterior" },
+            { src: "https://storage.googleapis.com/a1aa/image/byM03CfsQJRsBqczlpFaMG16kahYAza74srC8sJU1q0EUi0JA.jpg", alt: "Interior view of a room with wooden floor and windows", double: false, name: "Room Interior" },
+            { src: "https://storage.googleapis.com/a1aa/image/UkleEui7ltTyWakwImedjV1FhvHG9RjEQ9CZHcfgYAVRQJSnA.jpg", alt: "Interior view of a kitchen with wooden floor and appliances", double: false, name: "Kitchen Interior" },
+            { src: "https://storage.googleapis.com/a1aa/image/wDm4uFxHhZYxFBqTIrIdcvGBnq4HlDjYyh1jm4yz4XtBKR6E.jpg", alt: "Interior view of a bathroom with white tiles", double: false, name: "Bathroom Interior" },
+            { src: "https://storage.googleapis.com/a1aa/image/sB0I8ad31BY3Etmvh4I3LPbYCHexw1eMtznRB2ZLd1jDoEpTA.jpg", alt: "Floor plan", double: false, name: "Floor Plan" },
+            { src: "https://storage.googleapis.com/a1aa/image/5HkKgmV90RbCAZ139zvPw3PGE3N5j6jxOmWJA9slSZRdJR6E.jpg", alt: "Interior view of a room with wooden floor and windows", double: false, name: "Another Room" },
+            { src: "https://storage.googleapis.com/a1aa/image/iZvD7BwNqxpgAZTAqKJFWnUmdvDK2XmTwmg2u11WAhAeSi0JA.jpg", alt: "Interior view of a kitchen with wooden floor and appliances", double: false, name: "Kitchen Interior 2" },
+            { src: "https://storage.googleapis.com/a1aa/image/eZ9jb33m1nwnISse8G1Gq5b7rOuWC1rhXZAJHbIQweS1LJSnA.jpg", alt: "Interior view of a bathroom with white tiles", double: false, name: "Bathroom Interior 2" },
+            { src: "https://storage.googleapis.com/a1aa/image/cV8ALGOqwmbrMtn8bru4Oj6JEAvJXbY9xGixYT0PtOf7Si0JA.jpg", alt: "Exterior view of the building", double: false, name: "Building Exterior 2" },
+            { src: "https://storage.googleapis.com/a1aa/image/5HkKgmV90RbCAZ139zvPw3PGE3N5j6jxOmWJA9slSZRdJR6E.jpg", alt: "Interior view of a room with wooden floor and windows", double: false, name: "Another Room 2" },
+            { src: "https://storage.googleapis.com/a1aa/image/iZvD7BwNqxpgAZTAqKJFWnUmdvDK2XmTwmg2u11WAhAeSi0JA.jpg", alt: "Interior view of a kitchen with wooden floor and appliances", double: false, name: "Kitchen Interior 3" },
+            { src: "https://storage.googleapis.com/a1aa/image/eZ9jb33m1nwnISse8G1Gq5b7rOuWC1rhXZAJHbIQweS1LJSnA.jpg", alt: "Interior view of a bathroom with white tiles", double: false, name: "Bathroom Interior 3" },
+            { src: "https://storage.googleapis.com/a1aa/image/cV8ALGOqwmbrMtn8bru4Oj6JEAvJXbY9xGixYT0PtOf7Si0JA.jpg", alt: "Exterior view of the building", double: false, name: "Building Exterior 3" }
+        ];
+
+        let currentIndex = 0;
+        let modalCurrentIndex = 0;
+
+        function createCarouselItems() {
+            const container = document.getElementById('carouselInner');
+            container.innerHTML = '';
+
+            for (let i = 0; i < images.length; i++) {
+                const image = images[i];
+                const div = document.createElement('div');
+
+                if (image.double) {
+                    div.className = 'carousel-item double';
+                    div.innerHTML = `
+                        <img
+                            src="${image.src}"
+                            alt="${image.alt}"
+                            class="carousel-img"
+                            onclick="showModal(${i})"
+                        />
+                    `;
+                } else {
+                    div.className = 'carousel-item';
+                    div.innerHTML = `
+                        <div class="carousel-double">
+                            <img
+                                src="${image.src}"
+                                alt="${image.alt}"
+                                class="carousel-half-img"
+                                onclick="showModal(${i})"
+                            />
+                            ${i + 1 < images.length ? `
+                                <img
+                                    src="${images[i + 1].src}"
+                                    alt="${images[i + 1].alt}"
+                                    class="carousel-half-img"
+                                    onclick="showModal(${i + 1})"
+                                />
+                            ` : ''}
+                            <div class="carousel-label">Model</div>
+                        </div>
+                    `;
+                    i++;
+                }
+                container.appendChild(div);
+            }
+        }
+
+        function createModalCarouselItems() {
+            const container = document.getElementById('modalCarouselInner');
+            container.innerHTML = '';
+
+            images.forEach((image, i) => {
+                const div = document.createElement('div');
+                div.className = 'modal-carousel-item';
+                div.innerHTML = `
+                    <img
+                        src="${image.src}"
+                        alt="${image.alt}"
+                        class="modal-carousel-image"
+                    />
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateCarouselTransform() {
+            const inner = document.getElementById('carouselInner');
+            inner.style.transform = `translateX(-${currentIndex * (100 / 4)}%)`;
+        }
+
+        function updateModalCarouselTransform() {
+            const inner = document.getElementById('modalCarouselInner');
+            inner.style.transform = `translateX(-${modalCurrentIndex * 100}%)`;
+            document.getElementById('modalImageName').textContent = images[modalCurrentIndex].name;
+            document.getElementById('modalImageCount').textContent = `${modalCurrentIndex + 1}/${images.length}`;
+        }
+
+        function handleMoveLeft() {
+            if (currentIndex === 2) {
+                currentIndex = 0;
+            } else if (currentIndex > 0) {
+                currentIndex--;
+            }
+            updateCarouselTransform();
+        }
+
+        function handleMoveRight() {
+            if (currentIndex === 0) {
+                currentIndex = 2;
+            } else if (currentIndex < document.querySelectorAll('.carousel-item').length - 3) {
+                currentIndex++;
+            }
+            updateCarouselTransform();
+        }
+
+        function handleModalMoveLeft() {
+            if (modalCurrentIndex > 0) {
+                modalCurrentIndex--;
+                updateModalCarouselTransform();
+            }
+        }
+
+        function handleModalMoveRight() {
+            if (modalCurrentIndex < images.length - 1) {
+                modalCurrentIndex++;
+                updateModalCarouselTransform();
+            }
+        }
+
+        function showModal(index) {
+            modalCurrentIndex = index;
+            document.getElementById('modalContainer').style.display = 'block';
+            updateModalCarouselTransform();
+        }
+
+        function closeModal() {
+            document.getElementById('modalContainer').style.display = 'none';
+        }
+
+        // Initialize the carousels
+        createCarouselItems();
+        createModalCarouselItems();
+    </script>
+</body>
+</html>
